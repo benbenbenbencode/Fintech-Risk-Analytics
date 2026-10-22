@@ -1,0 +1,5 @@
+investor_id,investor_name,investor_type,commitment_amount
+INV-01,Bank Central Asia (Institutional Lender),Institutional Bank,50000000000
+INV-02,Alpha Fintech Fund V,Venture Debt,25000000000
+INV-03,Retail Lender Syndicate,Retail P2P,10000000000
+INV-04,Mandiri Capital Indonesia,Corporate CVC,30000000000

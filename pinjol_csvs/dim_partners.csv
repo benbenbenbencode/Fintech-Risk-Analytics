@@ -1,0 +1,6 @@
+partner_id,partner_name,channel_type,commission_rate
+PRT-01,Tokopedia Merchant Partner,E-Commerce,0.02
+PRT-02,Gojek Driver Agent,Gig Economy,0.015
+PRT-03,Direct Mobile App,Direct Organic,0.0
+PRT-04,PayLater Checkout Widget,POS Checkout,0.025
+PRT-05,Offline Agent Network Medan,Offline Agent,0.03
