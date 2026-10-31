@@ -1,0 +1,20 @@
+# --- python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# --- environments ---
+.venv/
+venv/
+.env
+
+# --- generated data / artefacts ---
+data/
+artifacts/
+*.joblib
+
+# --- editor / os ---
+.vscode/
+.DS_Store
+Thumbs.db
