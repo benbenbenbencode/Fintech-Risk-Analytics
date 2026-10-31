@@ -1,0 +1,59 @@
+# Example configuration pointing at the shipped example dataset.
+#
+#   python -c "from crf.auto_pipeline import run_auto; run_auto('examples/config.yaml')"
+#   streamlit run auto_app.py   ->  Upload CSVs  ->  use the files in examples/
+#
+# Paths are relative to this file, so the whole folder can be copied anywhere.
+
+project_name: example_loan_book
+
+# behavioural = also uses the first months of repayment behaviour
+scorecard_type: behavioral
+
+# Every loan needs its performance window to end before this date.
+as_of_date: "2026-12-31"
+
+data:
+  customers:
+    path: customers.csv
+    columns: {}          # columns already use the canonical names
+  loans:
+    path: loans.csv
+    columns: {}
+  repayments:
+    path: repayments.csv
+    columns: {}
+  bureau:
+    path: bureau.csv
+    columns: {}
+
+target:
+  bad_dpd: 90            # 90+ days past due counts as a default
+  observation_months: 3  # behaviour observed in the first quarter
+  performance_months: 9  # then nine months to see whether it went bad
+  exclude_if_obs_dpd_ge: 90
+
+features:
+  numeric: []            # left empty on purpose: discovery fills these in
+  categorical: []
+
+binning:
+  max_bins: 8
+  min_bin_pct: 0.05
+  monotonic: true
+
+selection:
+  min_iv: 0.02
+  max_corr: 0.70
+  max_features: 12
+  C: 1.0
+
+split:
+  mode: out_of_time
+  test_fraction: 0.30
+  seed: 42
+
+scorecard:
+  base_score: 600
+  base_odds: 50
+  pdo: 20
