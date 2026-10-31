@@ -1,0 +1,120 @@
+# =====================================================================
+# Universal Credit Risk Framework - config
+# Change this file (not the code) to point the pipeline at a new
+# dataset or product.
+# =====================================================================
+project_name: demo_payroll_loans
+
+# application = decision-time data only (no repayment behaviour)
+# behavioral  = adds repayment behaviour observed in the first N months
+scorecard_type: behavioral
+
+# Snapshot date of the data extract. Used to compute DPD and to decide
+# which loans have a fully matured performance window.
+as_of_date: "2025-12-31"
+
+# ---------------------------------------------------------------------
+# 1) Canonical schema mapping:  canonical_name: your_raw_column_name
+#    Columns that are not mapped keep their raw name and can still be
+#    used as features (see `features` below).
+# ---------------------------------------------------------------------
+data:
+  customers:                       # optional table
+    path: data/customers.csv
+    columns:
+      customer_id: customer_id
+      monthly_income: monthly_income
+  loans:                           # required
+    path: data/loans.csv
+    columns:
+      loan_id: loan_id
+      customer_id: customer_id
+      disbursement_date: disbursement_date
+      principal: principal
+      tenor_months: tenor_months
+  repayments:                      # required (one row per installment)
+    path: data/repayments.csv
+    columns:
+      loan_id: loan_id
+      installment_no: installment_no
+      due_date: due_date
+      paid_date: paid_date         # empty = not paid
+      due_amount: due_amount
+      paid_amount: paid_amount
+  bureau:                          # optional (credit bureau snapshot)
+    path: data/bureau.csv
+    columns:
+      customer_id: customer_id
+      snapshot_date: snapshot_date # latest snapshot <= disbursement date is used
+    # every other column is exposed as bureau_<column>
+
+# ---------------------------------------------------------------------
+# 2) Target (bad) definition  -  the part that is NEVER universal
+#    bad = max DPD >= bad_dpd during the performance window.
+#    Performance window starts right after the observation window.
+# ---------------------------------------------------------------------
+target:
+  bad_dpd: 90
+  observation_months: 3            # ignored for application scorecards
+  performance_months: 9
+  exclude_if_obs_dpd_ge: 90        # drop accounts already bad at observation end
+
+# ---------------------------------------------------------------------
+# 3) Features
+# ---------------------------------------------------------------------
+features:
+  numeric:
+    - age
+    - employer_tenure_months
+    - monthly_income
+    - principal
+    - tenor_months
+    - interest_rate_apr
+    - installment_amount           # derived: first scheduled installment
+    - is_repeat_borrower
+    - bureau_active_loans
+    - bureau_total_outstanding
+    - bureau_max_collectibility
+    - bureau_inquiries_3m
+    - bureau_has_writeoff
+  categorical:
+    - education
+    - marital_status
+    - employment_type
+    - region
+    - purpose
+    - collection_status            # DELIBERATELY LEAKY (set after default). The leakage checker should catch it.
+  ratios:                          # name: [numerator, denominator]
+    installment_to_income: [installment_amount, monthly_income]
+    loan_to_income: [principal, monthly_income]
+    bureau_debt_to_income: [bureau_total_outstanding, monthly_income]
+  rolling_windows: [1, 2]          # months, behavioural features only (must be < observation_months)
+
+# ---------------------------------------------------------------------
+# 4) Modelling controls
+# ---------------------------------------------------------------------
+binning:
+  max_bins: 8
+  min_bin_pct: 0.05
+  monotonic: true                  # force monotonic bad-rate trend for numeric features
+
+selection:
+  min_iv: 0.02
+  max_corr: 0.70                   # drop weaker feature if |corr(WoE)| above this
+  max_features: 12
+  C: 1.0                           # inverse L2 regularisation
+
+leakage:
+  max_iv: 2.0                      # single-feature IV above this is suspicious
+  banned_patterns: [collection, legal, recovery, writeoff_after, charge_off]
+  auto_drop: true
+
+split:
+  mode: out_of_time                # out_of_time | random
+  test_fraction: 0.30
+  seed: 42
+
+scorecard:
+  base_score: 600
+  base_odds: 50                    # good:bad odds at base_score
+  pdo: 20                          # points to double the odds

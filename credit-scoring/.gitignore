@@ -1,0 +1,23 @@
+# --- python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# --- generated data (rebuild with build.py / scripts/make_example_data.py) ---
+data/
+artifacts/
+
+# --- model artefacts ---
+*.joblib
+*.pkl
+
+# --- environments ---
+.venv/
+venv/
+.env
+
+# --- editor / os ---
+.vscode/
+.DS_Store
+Thumbs.db
